@@ -1,7 +1,7 @@
 import React, { useState, FormEvent } from 'react';
 import { FiChevronRight } from 'react-icons/fi';
 import logoImg from '../../assets/logo.svg';
-import { Title, Form, Repositories } from './styles';
+import { Title, Form, Repositories, Error } from './styles';
 import api from '../../services/api';
 
 interface Repository {
@@ -15,17 +15,30 @@ interface Repository {
 
 const Dashboard: React.FC = () => {
     const [newRepo, setNewRepo] = useState('');
+    const [infoError, setInfoError] = useState('');
     const [repositories, setRepository] = useState<Repository[]>([]);
 
     async function handleAddRepository(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        const response = await api.get(`repos/${newRepo}`);
+        if(!newRepo) {
+            setInfoError('Digite o autor/nome do repositório');
+            return
+        }
 
-        const repository = response.data;
+        try {
+            const response = await api.get(`repos/${newRepo}`);
 
-        setRepository([...repositories, repository]);
-        setNewRepo('');
+            const repository = response.data;
+
+            setRepository([...repositories, repository]);
+            setInfoError('');
+            setNewRepo('');
+
+        } catch (err) {
+            setInfoError('Digite um autor/nome válido')
+        }
+
     }
 
     return (
@@ -35,7 +48,7 @@ const Dashboard: React.FC = () => {
             </a>
             <Title>Explore repositórios no Github</Title>
 
-            <Form onSubmit={handleAddRepository}>
+            <Form hasError={!!infoError} onSubmit={handleAddRepository}>
                 <input
                     value={newRepo}
                     onChange={e => setNewRepo(e.target.value)}
@@ -43,6 +56,7 @@ const Dashboard: React.FC = () => {
                 />
                 <button type="submit">Pesquisar</button>
             </Form>
+            { infoError && <Error>{infoError}</Error>}
 
             <Repositories>
                 {repositories.map(repository => (
