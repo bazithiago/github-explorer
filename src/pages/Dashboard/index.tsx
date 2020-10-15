@@ -1,50 +1,66 @@
-import React from 'react';
-import logoImg from '../../assets/logo.svg'
-import { Title, Form, Repositories } from './styles'
+import React, { useState, FormEvent } from 'react';
 import { FiChevronRight } from 'react-icons/fi';
+import logoImg from '../../assets/logo.svg';
+import { Title, Form, Repositories } from './styles';
+import api from '../../services/api';
+
+interface Repository {
+    full_name: string;
+    description: string;
+    owner: {
+        login: string;
+        avatar_url: string;
+    };
+}
 
 const Dashboard: React.FC = () => {
-    return(
+    const [newRepo, setNewRepo] = useState('');
+    const [repositories, setRepository] = useState<Repository[]>([]);
+
+    async function handleAddRepository(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        const response = await api.get(`repos/${newRepo}`);
+
+        const repository = response.data;
+
+        setRepository([...repositories, repository]);
+        setNewRepo('');
+    }
+
+    return (
         <>
-        <a href="/"><img src={logoImg} alt="Github Explorer" width='215px'/></a>
-        <Title>Explore repositórios no Github</Title>
-
-        <Form>
-            <input placeholder="Digite o nome do repositório" onFocus={(e) => e.target.placeholder = ""} onBlur={(e) => e.target.placeholder = "Digite o nome do repositório"} />
-            <button type="submit">Pesquisar</button>
-        </Form>
-
-        <Repositories>
             <a href="/">
-                <img src="https://avatars3.githubusercontent.com/u/48968467?s=460&u=3cfaa8bb417d83f2e4517e2df692864b11091fbf&v=4" alt="Avatar"/>
-                <div>
-                    <strong>Nome do repositório</strong>
-                    <p>No description, website, or topics provided.</p>
-                </div>
-                <FiChevronRight/>
+                <img src={logoImg} alt="Github Explorer" width="215px" />
             </a>
+            <Title>Explore repositórios no Github</Title>
 
-            <a href="/">
-                <img src="https://avatars3.githubusercontent.com/u/48968467?s=460&u=3cfaa8bb417d83f2e4517e2df692864b11091fbf&v=4" alt="Avatar"/>
-                <div>
-                    <strong>Nome do repositório</strong>
-                    <p>No description, website, or topics provided.</p>
-                </div>
-                <FiChevronRight/>
-            </a>
+            <Form onSubmit={handleAddRepository}>
+                <input
+                    value={newRepo}
+                    onChange={e => setNewRepo(e.target.value)}
+                    placeholder="Digite o nome do repositório"
+                />
+                <button type="submit">Pesquisar</button>
+            </Form>
 
-            <a href="/">
-                <img src="https://avatars3.githubusercontent.com/u/48968467?s=460&u=3cfaa8bb417d83f2e4517e2df692864b11091fbf&v=4" alt="Avatar"/>
-                <div>
-                    <strong>Nome do repositório</strong>
-                    <p>No description, website, or topics provided.</p>
-                </div>
-                <FiChevronRight/>
-            </a>
-
-        </Repositories>
+            <Repositories>
+                {repositories.map(repository => (
+                    <a key={repository.full_name} href="teste">
+                        <img
+                            src={repository.owner.avatar_url}
+                            alt={repository.owner.login}
+                        />
+                        <div>
+                            <strong>{repository.full_name}</strong>
+                            <p>{repository.description}</p>
+                        </div>
+                        <FiChevronRight />
+                    </a>
+                ))}
+            </Repositories>
         </>
     );
-}
+};
 
 export default Dashboard;
